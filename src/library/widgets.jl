@@ -2,6 +2,7 @@ import Base: >>>
 export wrapbehavior,
        button,
        slider,
+       range-slider,
        checkbox,
        radio,
        radiogroup,
@@ -115,6 +116,80 @@ render(s::Slider, state) =
         )
     )
 
+    ## Range Slider
+
+    @api rangeslider => (RangeSlider <: Widget) begin
+        doc("""A range slider. Use this to select values from within a continous range of
+               numbers by selecting minimum and maximum values.""")
+        arg(
+            range::Range,
+            doc="""The range specifying the minimum and maximum values that the slider
+                 can take."""
+        )
+        kwarg(
+            valuemin::Real=first(range),
+            doc="The initial minimum value of the slider. Defaults to the first value in the range."
+        )
+        kwarg(
+            valuemax::Real=second(range),
+            doc="The initial maximum value of the slider. Defaults to the last value in the range."
+        )
+        kwarg(
+            valuediffmin::Real=third(range),
+            doc="The minimum allowed difference between the lower and upper selected values. Defaults to the maximum range."
+        )
+        kwarg(
+            valuediffmax::Real=third(range),
+            doc="The maximum allowed difference between the lower and upper selected values. Defaults to the maximum range."
+        )
+        kwarg(
+            alwaysshowpin::Bool=true,
+            doc="Never hid the pins."
+        )
+        kwarg(
+            editable::Bool=true,
+            doc="""If set to true, shows an editable text box with the current value
+            of the slider."""
+        )
+        kwarg(
+            pin::Bool=false,
+            doc="""If set to true, shows a pin containing the current value as you
+            drag the slider."""
+        )
+        kwarg(disabled::Bool=false, doc="If set to true, the slider is disabled.")
+        kwarg(
+            secondaryprogress::Real=0,
+            doc="Highlight the slider bar from the beginning to this value."
+        )
+        kwarg(
+            immediate::Bool=false,
+            doc="""If set to true, also trigger while the user is dragging the slider.
+            Due to the JavaScript implementation, this causes repeats in the subscribed
+            values when the text box is edited. Use `droprepeats` from `Reactive.jl`
+            to remove them."""
+        )
+    end
+
+    wrapbehavior(s::Slider) =
+        intent(ToType{eltype(s.range)}(),
+               s.immediate ? hasstates(s, triggers=Dict("valueMin"=>"updateValues", "valueMax"=>"updateValues", "immediateValue"=>"immediate-value-change")) : hasstate(s))
+
+    render(s::Slider, state) =
+        Elem("paper-slider", attributes=@d(
+            :min => first(s.range),
+            :max => last(s.range),
+            :step => step(s.range),
+            :valueMin => s.valuemin,
+            :valueMax => s.valuemax,
+            :valueDiffMin => s.valuediffmin,
+            :valueDiffMax => s.valuediffmax,
+            :alwaysShowPin => boolattr(s.alwaysshowpin),
+            :editable => boolattr(s.editable),
+            :pin => boolattr(s.pin),
+            :disabled => boolattr(s.disabled),
+            :secondaryProgress => s.secondaryprogress,
+            )
+        )
 
 ## Checkbox
 @api checkbox => (Checkbox <: Widget) begin
